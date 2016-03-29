@@ -62,6 +62,10 @@ There are also several key commands you can use
 What's New
 ==========
 
+1.0.3
+-----
+- Fixed reprinting of messages
+
 1.0.2
 -----
 - Now supports utc with config options for time format

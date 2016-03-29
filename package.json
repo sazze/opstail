@@ -1,6 +1,6 @@
 {
   "name": "opstail",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Live tail of EventsD",
   "main": "lib/ops.js",
   "bin": {
