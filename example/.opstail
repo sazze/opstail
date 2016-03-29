@@ -1,0 +1,13 @@
+{
+    "host": "IP ADDRESS",
+    "port": 8151,
+    "routingKeys": {
+        "all": "event.error.env.production.application.#"
+    },
+
+    "format": {
+        "time": "M/YY h:mm:ss A",
+        "msg": "#{time} [#{host}] #{errorType|random}: #{errorMsg|errorType}\n",
+        "meta": "[#{serverName}] #{requestUri} (#{scriptFilename})[#{message.remoteIpAddress}]\n"
+    }
+}

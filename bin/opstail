@@ -1,0 +1,117 @@
+#!/usr/bin/env node
+
+var _ = require('lodash');
+var util = require('../lib/util');
+var path = require('path');
+var log = require('../lib/log');
+
+var yargs = require('yargs')
+  .usage('Tail Operation Logs\n\nUsage: $0 [options] [routingKey...]\n\nVersion: ' + require('../package.json').version)
+  .options('l', { alias: 'list', describe: 'List available routing key shortcuts' })
+  .options('h', { alias: 'help', describe: 'Show this help' })
+  .options('m', { alias: 'meta', describe: 'Turn on extra meta data'})
+  .options('e', { alias: 'error', describe: 'Toggle error messages'})
+  .options('w', { alias: 'warn', describe: 'Toggle warn messages'})
+  .options('i', { alias: 'info', describe: 'Toggle info messages'})
+  .options('d', { alias: 'debug', describe: 'Toggle debug messages'})
+  .options('v', { alias: 'verbose', describe: 'Toggle verbose messages'})
+  .options('s', { alias: 'slack', describe: 'Toggle Slack messages'})
+  .options('b', { alias: 'bufferLimit', describe: 'Size of Free Memory left before starting to delete old entries in (MB)', default: 500})
+  .config('config')
+  .example('$0 sl msl dp', 'Listen for Shoplately, Market.Shoplately and Dealsplus Messages');
+
+var args = yargs.argv;
+
+/**
+ * Initialize config.
+ * Start with default, merge in config file, then merge in command line args.
+ */
+var config = require('../lib/config');
+
+// Check for config file
+var configPaths = (args.config ? [args.config] : []); // prioritize arg config path
+
+configPaths.push(
+  process.cwd() + '/.opstail',
+  util.getUserHome() + '/.opstail'
+);
+
+_.each(configPaths, function(configPath) {
+  var fileConfig = util.parseConfig(path.normalize(configPath));
+
+  if (fileConfig) {
+    _.merge(config, fileConfig);
+    return false;
+  }
+
+  return true;
+});
+
+// Merge command line args
+_.merge(config, args);
+
+// Set log colors
+_.merge(log.TYPE_COLORS, config.typeColors);
+
+// Process server name filter regex, if any
+if (config.serverName) {
+  config.serverName = new RegExp(config.serverName);
+}
+
+/**
+ * Process some options
+ */
+if (args.help) {
+  console.log(yargs.help());
+  process.exit(0);
+}
+
+if (args.version) {
+  console.log('Version: %s', require('../package.json').version);
+  process.exit(0);
+}
+
+if (args.list) {
+  console.log('\nBelow are the available shortcuts for routing Keys.\nRemember you can always use the full routing key if one does not match.\n')
+
+  var maxLength = 0;
+  _.each(config.routingKeys, function(key, shortcut) {
+    if (maxLength < shortcut.length) {
+      maxLength = shortcut.length;
+    }
+  });
+
+  _.each(config.routingKeys, function(key, shortcut) {
+    if (_.isString(key)) {
+      var keySplit = key.split('.');
+      keySplit[keySplit.length - 1] = log.color(keySplit[keySplit.length - 1], log.GREEN);
+      key = keySplit.join('.');
+    } else if (_.isArray(key)) {
+      key = key.join(', ');
+    }
+
+    console.log(new Array(maxLength + 1 - shortcut.length).join(' ') + log.color(shortcut, log.GREEN) + new Array(10 - maxLength).join(' ') + key);
+  });
+
+  console.log(''); // Print new line
+
+  process.exit(0);
+}
+
+if (!_.isEmpty(args._)) {
+  config.keys = args._;
+} else if (_.isEmpty(config.keys)) {
+  config.keys = ['all'];
+}
+
+// Specific Growl, need to make it global
+global.growlEnabled = config.growl;
+
+
+
+var ops = require('../lib/Ops');
+
+var opstail = new ops(config);
+opstail.start();
+
+module.exports = opstail;
