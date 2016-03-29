@@ -62,6 +62,14 @@ There are also several key commands you can use
 What's New
 ==========
 
+1.0.2
+-----
+- Now supports utc with config options for time format
+
+1.0.1
+-----
+- Fixed bug with time formats
+
 1.0.0
 -----
 - Open Sourced OpsTail
