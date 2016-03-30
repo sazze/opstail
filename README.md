@@ -62,6 +62,11 @@ There are also several key commands you can use
 What's New
 ==========
 
+1.1.0
+-----
+- Now supports different formats based on RoutingKey
+- Now supports levelType from sand
+
 1.0.3
 -----
 - Fixed reprinting of messages
